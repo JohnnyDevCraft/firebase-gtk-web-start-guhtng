@@ -77,11 +77,13 @@ firebase.auth().onAuthStateChanged(user => {
 
     // Subscribe to the guestbook collection
     subscribeGuestbook();
+    subscribeCurrentRSVP(user);
   } else {
     startRsvpButton.textContent = "RSVP";
     guestbookContainer.style.display = "none";
 
-    unsubscribeGuestbook();
+    unsubscribeGuestbook(user);
+    unsubscribeCurrentRSVP();
   }
 });
 
@@ -186,4 +188,38 @@ rsvpNo.onclick = () => {
  userDoc.set({
    attending: false
  }).catch(console.error)
+}
+
+// ...
+// Listen for attendee list
+function subscribeCurrentRSVP(user){
+ rsvpListener = firebase.firestore()
+ .collection('attendees')
+ .doc(user.uid)
+ .onSnapshot((doc) => {
+   if (doc && doc.data()){
+     const attendingResponse = doc.data().attending;
+
+     // Update css classes for buttons
+     if (attendingResponse){
+       rsvpYes.className="clicked";
+       rsvpNo.className="";
+     }
+     else{
+       rsvpYes.className="";
+       rsvpNo.className="clicked";
+     }
+   }
+ });
+}
+
+
+function unsubscribeCurrentRSVP(){
+ if (rsvpListener != null)
+ {
+   rsvpListener();
+   rsvpListener = null;
+ }
+ rsvpYes.className="";
+ rsvpNo.className="";
 }
